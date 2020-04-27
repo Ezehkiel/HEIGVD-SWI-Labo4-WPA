@@ -18,13 +18,12 @@ Dans cette première partie, vous allez récupérer le script **Python3** [wpa_k
 - Analyser le fonctionnement du script. En particulier, __faire attention__ à la variable ```data``` qui contient la payload de la trame et la comparer aux données de la quatrième trame du 4-way handshake. Lire [la fin de ce document] pour l’explication de la différence.
 - __Modifier le script__ pour qu’il récupère automatiquement, à partir de la capture, les valeurs qui se trouvent actuellement codées en dur (```ssid```, ```APmac```, ```Clientmac```, nonces…) 
 
-> Le script se trouve [ici](./files/wpa_key_derivation.py) 
+> Le script se trouve ici : [files/wpa_key_derivation.py](./files/wpa_key_derivation.py).
 
 
 ### 2. Scaircrack (aircrack basé sur Scapy)
 
 Aircrack utilise le quatrième message du 4-way handshake pour tester les passphrases contenues dans un dictionnaire. Ce message ne contient pas de données chiffrées mais il est authentifié avec un MIC qui peut être exploité comme « oracle » pour tester des clés différentes obtenues des passphrases du dictionnaire.
-
 
 Utilisant le script [wpa_key_derivation.py](https://github.com/arubinst/HEIGVD-SWI-Labo3-WPA/blob/master/files/) comme guide, créer un nouveau script scaircrack.py qui doit être capable de :
 
@@ -36,17 +35,17 @@ Utilisant le script [wpa_key_derivation.py](https://github.com/arubinst/HEIGVD-S
    - Identiques &rarr; La passphrase utilisée est correcte
    - Différents &rarr; Essayer avec une nouvelle passphrase
 
-> Le script se trouve [ici](./files/scaircrack.py)
+> Le script se trouve ici : [files/scaircrack.py](./files/scaircrack.py)
 >
-> Ci-dessous nous avons une capture du fichier contenant une liste de mots-de-passe. 
+> Ci-dessous, nous avons une capture du fichier contenant une liste de mots-de-passe. 
 > 
 > ![](./img/2_2.png)
 > 
-> Sur la capture suivante nous pouvons voir que nous avons réussi à trouver le mot de passe qui avait été utilisé pour la capture Wireshark. Le script nous affiche le mot de passe correct ainsi que toute les informations qu'il a réussi déduire avec le mot de passe (les différente clés).
+> Sur la capture suivante, nous pouvons voir que nous avons réussi à trouver le mot de passe qui avait été utilisé pour la capture Wireshark. Le script nous affiche la passphrase correcte ainsi que toutes les informations qu'il a réussi à déduire (les différentes clés) avec cette passphrase ainsi qu'avec le SSID, les adresses MAC et les deux nonces.
 > 
 > ![](./img/2_1.png)
 >
-> Si le mot de passe ne se trouve pas dans le fichier le script va simplement nous dire qu'il n'a pas trouvé de mot de passe valide
+> Si la passphrase ne se trouve pas dans le fichier, le script va simplement nous dire qu'il n'a pas trouvé de passphrase valide.
 > 
 > ![](./img/2_3.png)
 >

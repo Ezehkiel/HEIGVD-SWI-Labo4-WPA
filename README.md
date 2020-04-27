@@ -18,8 +18,9 @@ Dans cette première partie, vous allez récupérer le script **Python3** [wpa_k
 - Analyser le fonctionnement du script. En particulier, __faire attention__ à la variable ```data``` qui contient la payload de la trame et la comparer aux données de la quatrième trame du 4-way handshake. Lire [la fin de ce document] pour l’explication de la différence.
 - __Modifier le script__ pour qu’il récupère automatiquement, à partir de la capture, les valeurs qui se trouvent actuellement codées en dur (```ssid```, ```APmac```, ```Clientmac```, nonces…) 
 
+---
 > Le script se trouve ici : [files/wpa_key_derivation.py](./files/wpa_key_derivation.py).
-
+---
 
 ### 2. Scaircrack (aircrack basé sur Scapy)
 
@@ -35,6 +36,7 @@ Utilisant le script [wpa_key_derivation.py](https://github.com/arubinst/HEIGVD-S
    - Identiques &rarr; La passphrase utilisée est correcte
    - Différents &rarr; Essayer avec une nouvelle passphrase
 
+---
 > Le script se trouve ici : [files/scaircrack.py](./files/scaircrack.py)
 >
 > Ci-dessous, nous avons une capture du fichier contenant une liste de mots-de-passe. 
@@ -50,7 +52,7 @@ Utilisant le script [wpa_key_derivation.py](https://github.com/arubinst/HEIGVD-S
 > ![](./img/2_3.png)
 >
 > ![](./img/2_4.png)
-
+---
 
 ## Livrables
 

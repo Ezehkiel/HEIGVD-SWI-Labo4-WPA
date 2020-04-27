@@ -18,7 +18,7 @@ Dans cette première partie, vous allez récupérer le script **Python3** [wpa_k
 - Analyser le fonctionnement du script. En particulier, __faire attention__ à la variable ```data``` qui contient la payload de la trame et la comparer aux données de la quatrième trame du 4-way handshake. Lire [la fin de ce document] pour l’explication de la différence.
 - __Modifier le script__ pour qu’il récupère automatiquement, à partir de la capture, les valeurs qui se trouvent actuellement codées en dur (```ssid```, ```APmac```, ```Clientmac```, nonces…) 
 
-> Le script se trouve [ici](.files/wpa_key_derivation.py) 
+> Le script se trouve [ici](./files/wpa_key_derivation.py) 
 
 
 ### 2. Scaircrack (aircrack basé sur Scapy)
@@ -38,21 +38,19 @@ Utilisant le script [wpa_key_derivation.py](https://github.com/arubinst/HEIGVD-S
 
 > Le script se trouve [ici](./files/scaircrack.py)
 >
-> ![](./files/2_1.png)
+> Ci-dessous nous avons une capture du fichier contenant une liste de mots-de-passe. 
+> 
+> ![](./img/2_2.png)
+> 
+> Sur la capture suivante nous pouvons voir que nous avons réussi à trouver le mot de passe qui avait été utilisé pour la capture Wireshark. Le script nous affiche le mot de passe correct ainsi que toute les informations qu'il a réussi déduire avec le mot de passe (les différente clés).
+> 
+> ![](./img/2_1.png)
 >
-> ![](./files/2_2.png)
+> Si le mot de passe ne se trouve pas dans le fichier le script va simplement nous dire qu'il n'a pas trouvé de mot de passe valide
+> 
+> ![](./img/2_3.png)
 >
-> ![](./files/2_3.png)
->
-> ![](./files/2_4.png)
-
-
-### 3. Scairodump (Challenge)
-
-**Note : un délai supplémentaire peut être accordé pour ce dernier exercice - contactez-nous si jamais. Le reste du labo est à rendre à la date indiquée**
-
-Modifier votre script de cracking pour qu’il soit capable de faire les mêmes opérations que le script précédant mais sans utiliser une capture Wireshark. Pour cela, il faudra donc sniffer un 4-way handshake utilisant Scapy et refaire toutes les opérations de la partie 2 pour obtenir la passphrase. Le script doit implémenter la possibilité de déauthentifier un client pour stimuler le 4-way handshake. Cette déauthentification doit aussi être implémentée avec Scapy.
-
+> ![](./img/2_4.png)
 
 
 ## Livrables

@@ -28,7 +28,7 @@ import hmac, hashlib
 
 def customPRF512(key, A, B):
     """
-    This function calculates the key expansion from the 256 bit PMK to the 512 bit PTK
+    This function computes the key expansion from the 256 bit PMK to the 512 bit PTK.
     """
     blen = 64
     i = 0
@@ -42,7 +42,7 @@ def customPRF512(key, A, B):
 
 def find_ssid(packets):
     """
-        Loop on all packets and try to found a Beacon frame to fetch the SSID name.
+        Loop on all packets and try to find a Beacon frame to retrieve the SSID name.
     """
     for packet in packets:
         if Dot11Beacon in packet:
@@ -52,15 +52,15 @@ def find_ssid(packets):
 
 def format_mac(mac):
     """
-        Format a MAC address from aa:bb:cc to aabbcc.
+        Format a MAC address from aa:bb:cc format to aabbcc format.
     """
     return mac.replace(":", "")
 
 
 def get_ap_mac(packets):
     """
-        Loop on all packets and try to found a Beacon frame to get the sender address of the frame. It should be the ap
-        address.
+        Loop on all packets and try to find a Beacon frame to get the sender address of the frame.
+        It should be the AP address.
     """
     for packet in packets:
         if Dot11Beacon in packet:
@@ -70,10 +70,12 @@ def get_ap_mac(packets):
 
 def get_client_mac(packets, ap_mac):
     """
-        Loop on all packets and try to found Auth packets, take the first one and extract the client address. Only if the packet was send to our AP
+        Loop on all packets and try to find Auth packets. Take the first one and extract the client 
+        address, only if the packet was sent to our AP.
     """
     for packet in packets:
-        # SI c'est un paquet d'authentification, que c'est le premier des deux et qu'il est bien envoyé à notre AP on va prendre l'adresse du client
+        # If it is an auth packet, and it is the first of the two auth packet, and our AP is the recipient,
+        # then we get the client MAC address
         if Dot11Auth in packet and packet[Dot11Auth].seqnum == 1 and a2b_hex(format_mac(packet.addr1)) == ap_mac:
             return packet.addr2
     return ""
@@ -81,8 +83,8 @@ def get_client_mac(packets, ap_mac):
 
 def get_nonce(packets, source):
     """
-        Loop on all packets and try to found EAPOL packets. We check that the packet is the first or the seconde
-        packet of the exchange (Nonce exchange). We want the Nonce send by the 'source' parameter
+        Loop on all packets and try to find EAPOL packets. We check that the packet is the first or
+        the second packet of the exchange (Nonce exchange). The nonce must be sent by the 'source'.
     """
     for packet in packets:
         if EAPOL in packet and a2b_hex(format_mac(packet.addr2)) == source and (b2a_hex(packet[Raw].load[1:3]).decode() == "008a" or b2a_hex(packet[Raw].load[1:3]).decode() == "010a"):
@@ -92,7 +94,8 @@ def get_nonce(packets, source):
 
 def get_mic(packets):
     """
-        Loop on all packets and try to found the 4th packet of the EAPOL exchange. We extract the MIC of the packet
+        Loop on all packets and try to find the 4th packet of the EAPOL exchange.
+        Then extract the MIC of the packet.
     """
     for packet in packets:
         if EAPOL in packet and b2a_hex(packet[Raw].load[1:3]).decode() == "030a":
@@ -102,7 +105,8 @@ def get_mic(packets):
 
 def get_data(packets):
     """
-        Loop on all packets and try to found the 4th packets of the EAPOL exchange. We extract the data (remove the MIC, replaced by 0)
+        Loop on all packets and try to find the 4th packet of the EAPOL exchange.
+        Then extract the data (MIC is removed, replaced by 0).
     """
     for packet in packets:
         if EAPOL in packet and b2a_hex(packet[Raw].load[1:3]).decode() == "030a":
